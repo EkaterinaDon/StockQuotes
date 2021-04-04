@@ -7,6 +7,7 @@
 
 import UIKit
 
+var favoriteQuotes: [FavoriteQuote] = []
 
 class ViewController: UIViewController {
     
@@ -34,6 +35,7 @@ class ViewController: UIViewController {
         
         self.configureUI()
         self.loadData()
+        favoriteQuotes = storeStack.loadFavoritesFromCoreData()
     }
     
     // MARK: UI
@@ -131,7 +133,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         cell.favoriteButton.addTarget(self, action: #selector(addToFavorites(favoriteButton:)), for: .touchUpInside)
-        
         return cell
     }
     
@@ -139,17 +140,28 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         
         guard let indexPath = tableView.indexPathForRow(at: favoriteButton.convert(favoriteButton.frame.origin, to: tableView)) else { return }
         
-        if favoriteButton.isSelected == true {
-            favoriteButton.isSelected = false
+//        if favoriteButton.isSelected == true {
+//            favoriteButton.isSelected = false
+//            storeStack.deleteFromFavoritesForButton(quote: quoteData[indexPath.row])
+//        } else {
+//            favoriteButton.isSelected = true
+//            if defaults.bool(forKey: "FirstLaunch") == true {
+//                storeStack.saveToFavorites(model: quoteData[indexPath.row])
+//            } else {
+//                storeStack.saveToFavoritesFirstLaunch(model: model[indexPath.row])
+//            }
+//        }
+       // favoriteQuotes = storeStack.loadFavoritesFromCoreData()
+        
+        if favoriteQuotes.contains(where: { $0.symbol == quoteData[indexPath.row].symbol }) {
+            favoriteButton.setImage(UIImage(named: "heart"), for: .normal)
+            favoriteQuotes = favoriteQuotes.filter { $0.symbol == quoteData[indexPath.row].symbol }
             storeStack.deleteFromFavoritesForButton(quote: quoteData[indexPath.row])
         } else {
-            favoriteButton.isSelected = true
-            if defaults.bool(forKey: "FirstLaunch") == true {
-                storeStack.saveToFavorites(model: quoteData[indexPath.row])
-            } else {
-                storeStack.saveToFavoritesFirstLaunch(model: model[indexPath.row])
-            }
+            favoriteButton.setImage(UIImage(named: "filledHeart"), for: .normal)
+            storeStack.saveToFavorites(model: quoteData[indexPath.row])
         }
+        favoriteQuotes = storeStack.loadFavoritesFromCoreData()
     }
     
     

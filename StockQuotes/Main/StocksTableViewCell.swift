@@ -7,7 +7,10 @@
 
 import UIKit
 
+
 class StocksTableViewCell: UITableViewCell {
+    
+    var quoteData = Quote()
     
     // MARK: - Subviews
     
@@ -75,7 +78,9 @@ class StocksTableViewCell: UITableViewCell {
     // MARK: - UI
     
     override func prepareForReuse() {
+        super.prepareForReuse()
         [self.titleLabel, self.subtitleLabel, self.priceLabel, self.changesLabel].forEach { $0.text = nil }
+
     }
     
     private func configureUI() {
@@ -115,12 +120,6 @@ class StocksTableViewCell: UITableViewCell {
             self.favoriteButton.heightAnchor.constraint(equalToConstant: 20.0),
             self.favoriteButton.widthAnchor.constraint(equalToConstant: 20.0)
             ])
-        
-        let filledHeart = UIImage(named: "filledHeart")
-        let emptyHeart = UIImage(named: "heart")
-        
-        favoriteButton.setImage(emptyHeart, for: .normal)
-        favoriteButton.setImage(filledHeart, for: .selected)
     }
     
     private func addSubtitleLabel() {
@@ -162,6 +161,14 @@ class StocksTableViewCell: UITableViewCell {
         self.subtitleLabel.text = cellModelFromCoreData.longName
         self.priceLabel.text = cellModelFromCoreData.currency! + "\(String(describing: cellModelFromCoreData.regularMarketDayHigh))"
         self.changesLabel.text = "\(String(describing: cellModelFromCoreData.regularMarketDayLow))"
+        self.updateButton(quote: cellModelFromCoreData)
     }
     
+    func updateButton(quote: Quote) {
+        if favoriteQuotes.contains(where: {$0.symbol == quote.symbol }) {
+            favoriteButton.setImage(UIImage(named: "filledHeart"), for: .normal)
+        } else {
+            favoriteButton.setImage(UIImage(named: "heart"), for: .normal)
+        }
+    }
 }
