@@ -11,12 +11,11 @@ class FavoriteQuotesViewController: UIViewController {
 
     var tableView = UITableView()
     let storeStack = CoreDataStack()
-    var favoriteQuotes: [FavoriteQuote] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.configureUI()
-        self.favoriteQuotes = storeStack.loadFavoritesFromCoreData()
+        favoriteQuotes = storeStack.loadFavoritesFromCoreData()
         self.tableView.reloadData()
                 
     }
