@@ -18,9 +18,8 @@ extension FavoriteQuote {
 
     @NSManaged public var currency: String?
     @NSManaged public var longName: String?
-    @NSManaged public var regularMarketDayHigh: Float
-    @NSManaged public var regularMarketDayLow: Float
     @NSManaged public var symbol: String?
+    @NSManaged public var logo: String?
 
 }
 

@@ -46,6 +46,8 @@ extension FavoriteQuotesViewController: UITableViewDelegate, UITableViewDataSour
         let dequeuedCell = tableView.dequeueReusableCell(withIdentifier: "FavoriteQuotesCell", for: indexPath)
         guard let cell = dequeuedCell as? FavoriteQuotesTableViewCell else { return dequeuedCell }
         cell.configure(with: favoriteQuotes[indexPath.row])
+        let image = savedImages[favoriteQuotes[indexPath.row].symbol!]
+        cell.companyImageView.image = image
         return cell
     }
     

@@ -28,7 +28,6 @@ class CoreDataStack {
     // MARK: - Core Data Saving support
     
     func saveContext() {
-       // let context = persistentContainer.viewContext
         if context.hasChanges {
             do {
                 try context.save()
@@ -41,10 +40,9 @@ class CoreDataStack {
     
     func loadFromCoreData() -> [Quote] {
         
-        var request = NSFetchRequest<NSFetchRequestResult>()
-        request = Quote.fetchRequest()
+        let request : NSFetchRequest<Quote> = Quote.fetchRequest()
         request.returnsObjectsAsFaults = false
-        let results = try! context.fetch(Quote.fetchRequest()) as! [Quote]
+        let results = try! context.fetch(request)
         return results
     }
     
@@ -54,8 +52,7 @@ class CoreDataStack {
         quote.setValue(model.longName, forKey: "longName")
         quote.setValue(model.currency, forKey: "currency")
         quote.setValue(model.symbol, forKey: "symbol")
-        quote.setValue(model.regularMarketDayLow, forKey: "regularMarketDayLow")
-        quote.setValue(model.regularMarketDayLow, forKey: "regularMarketDayLow")
+        quote.setValue(model.logo, forKey: "logo")
         
         let fetchRequest : NSFetchRequest<FavoriteQuote> = FavoriteQuote.fetchRequestFavorite()
         if let results = try? context.fetch(fetchRequest) {
@@ -67,24 +64,6 @@ class CoreDataStack {
         }
     }
     
-    func saveToFavoritesFirstLaunch(model: Model) {
-
-        let quote = NSEntityDescription.insertNewObject(forEntityName: "FavoriteQuote", into: context)
-        quote.setValue(model.longName, forKey: "longName")
-        quote.setValue(model.currency, forKey: "currency")
-        quote.setValue(model.symbol, forKey: "symbol")
-        quote.setValue(model.regularMarketDayLow, forKey: "regularMarketDayLow")
-        quote.setValue(model.regularMarketDayLow, forKey: "regularMarketDayLow")
-        
-        let fetchRequest : NSFetchRequest<FavoriteQuote> = FavoriteQuote.fetchRequestFavorite()
-        if let results = try? context.fetch(fetchRequest) {
-            for result in results {
-                if result.symbol != model.symbol {
-                    saveContext()
-                }
-            }
-        }
-    }
     
     func loadFavoritesFromCoreData() -> [FavoriteQuote] {
         

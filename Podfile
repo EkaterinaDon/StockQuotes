@@ -9,5 +9,6 @@ target 'StockQuotes' do
 	
 pod 'Charts'
 pod "TinyConstraints"
+pod 'Alamofire', '~> 5.2'
 
 end

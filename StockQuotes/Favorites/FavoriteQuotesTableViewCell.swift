@@ -11,11 +11,19 @@ class FavoriteQuotesTableViewCell: UITableViewCell {
 
     // MARK: - Subviews
     
+    private(set) lazy var companyImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.layer.cornerRadius = 25.0
+        imageView.layer.masksToBounds = true
+        return imageView
+    }()
+    
     private(set) lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .black
-        label.font = UIFont.systemFont(ofSize: 16.0)
+        label.font = UIFont.systemFont(ofSize: 14.0)
         return label
     }()
     
@@ -23,7 +31,7 @@ class FavoriteQuotesTableViewCell: UITableViewCell {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .gray
-        label.font = UIFont.systemFont(ofSize: 13.0)
+        label.font = UIFont.systemFont(ofSize: 12.0)
         return label
     }()
     
@@ -48,6 +56,16 @@ class FavoriteQuotesTableViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.configureUI()
+        
+        backgroundColor = .clear
+        layer.masksToBounds = false
+        layer.shadowOpacity = 0.5
+        layer.shadowRadius = 2
+        layer.shadowOffset = CGSize(width: 3, height: 3)
+        layer.shadowColor = UIColor.black.cgColor
+        
+        contentView.backgroundColor = .white
+        contentView.layer.cornerRadius = 12
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -63,17 +81,29 @@ class FavoriteQuotesTableViewCell: UITableViewCell {
     }
     
     private func configureUI() {
+        self.addImage()
         self.addTitleLabel()
         self.addSubtitleLabel()
         self.addPriceLabel()
         self.addChangesLabel()
     }
     
+    private func addImage() {
+        self.contentView.addSubview(self.companyImageView)
+        NSLayoutConstraint.activate([
+            self.companyImageView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
+            self.companyImageView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor),
+            self.companyImageView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor),
+            self.companyImageView.heightAnchor.constraint(equalToConstant: 50.0),
+            self.companyImageView.widthAnchor.constraint(equalToConstant: 50.0)
+        ])
+    }
+    
     private func addTitleLabel() {
         self.contentView.addSubview(self.titleLabel)
         NSLayoutConstraint.activate([
             self.titleLabel.topAnchor.constraint(equalTo: self.contentView.topAnchor, constant: 4.0),
-            self.titleLabel.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 12.0),
+            self.titleLabel.leftAnchor.constraint(equalTo: self.companyImageView.rightAnchor, constant: 12.0),
             self.titleLabel.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -140.0)
             ])
     }
@@ -82,7 +112,7 @@ class FavoriteQuotesTableViewCell: UITableViewCell {
         self.contentView.addSubview(self.subtitleLabel)
         NSLayoutConstraint.activate([
             self.subtitleLabel.topAnchor.constraint(equalTo: self.titleLabel.bottomAnchor),
-            self.subtitleLabel.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 12.0),
+            self.subtitleLabel.leftAnchor.constraint(equalTo: self.companyImageView.rightAnchor, constant: 12.0),
             self.subtitleLabel.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -140.0)
             ])
     }
@@ -108,8 +138,8 @@ class FavoriteQuotesTableViewCell: UITableViewCell {
     func configure(with cellModel: FavoriteQuote) {
         self.titleLabel.text = cellModel.symbol
         self.subtitleLabel.text = cellModel.longName
-        self.priceLabel.text = cellModel.currency! + "\(String(describing: cellModel.regularMarketDayHigh))"
-        self.changesLabel.text = "\(String(describing: cellModel.regularMarketDayLow))"
+        //self.priceLabel.text = cellModel.currency! + "\(String(describing: cellModel.regularMarketDayHigh))"
+        //self.changesLabel.text = "\(String(describing: cellModel.regularMarketDayLow))"
     }
     
 }

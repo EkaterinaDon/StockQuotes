@@ -9,6 +9,7 @@ import UIKit
 
 var favoriteQuotes: [FavoriteQuote] = []
 
+
 class ViewController: UIViewController {
     
     var tableView = UITableView()
@@ -21,14 +22,11 @@ class ViewController: UIViewController {
     }
     
     let network = NetworkManager()
-    var model = [Model]()
     var favorites: [Quote] = []
     var quoteData = [Quote]()
     var filteredQuotes: [Quote] = []
     
     let storeStack = CoreDataStack()
-    
-    let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,24 +63,9 @@ class ViewController: UIViewController {
     // MARK: Load Data
     
     func loadData() {
-        if defaults.bool(forKey: "FirstLaunch") == true {
-            self.quoteData = storeStack.loadFromCoreData()
-            network.loadData { [weak self] data in
-                guard let self = self else { return }
-                self.model = data
-                //self.quoteData = self.storeStack.loadFromCoreData()
-                self.tableView.reloadData()
-            }
-            defaults.setValue(true, forKey: "FirstLaunch")
-        } else {
-            print("FirstLaunch")
-            network.loadData { [weak self] data in
-                guard let self = self else { return }
-                self.model = data
-                self.tableView.reloadData()
-            }
-            defaults.setValue(true, forKey: "FirstLaunch")
-        }
+        network.loadData()
+        self.quoteData = storeStack.loadFromCoreData()
+        self.tableView.reloadData()
     }
     
     @objc func showFavorites() {
@@ -111,12 +94,10 @@ class ViewController: UIViewController {
 
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if defaults.bool(forKey: "FirstLaunch") == true && !isFiltering {
+        if !isFiltering {
             return quoteData.count
-        } else if isFiltering {
-            return filteredQuotes.count
         } else {
-            return model.count
+            return filteredQuotes.count
         }
     }
     
@@ -124,12 +105,10 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         let dequeuedCell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         guard let cell = dequeuedCell as? StocksTableViewCell else { return dequeuedCell }
         
-        if defaults.bool(forKey: "FirstLaunch") == true && !isFiltering {
+        if !isFiltering {
             cell.configure(with: quoteData[indexPath.row])
-        } else if isFiltering {
-            cell.configure(with: filteredQuotes[indexPath.row])
         } else {
-            cell.configure(with: model[indexPath.row])
+            cell.configure(with: filteredQuotes[indexPath.row])
         }
         
         cell.favoriteButton.addTarget(self, action: #selector(addToFavorites(favoriteButton:)), for: .touchUpInside)
@@ -139,19 +118,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     @objc func addToFavorites(favoriteButton: UIButton) {
         
         guard let indexPath = tableView.indexPathForRow(at: favoriteButton.convert(favoriteButton.frame.origin, to: tableView)) else { return }
-        
-//        if favoriteButton.isSelected == true {
-//            favoriteButton.isSelected = false
-//            storeStack.deleteFromFavoritesForButton(quote: quoteData[indexPath.row])
-//        } else {
-//            favoriteButton.isSelected = true
-//            if defaults.bool(forKey: "FirstLaunch") == true {
-//                storeStack.saveToFavorites(model: quoteData[indexPath.row])
-//            } else {
-//                storeStack.saveToFavoritesFirstLaunch(model: model[indexPath.row])
-//            }
-//        }
-       // favoriteQuotes = storeStack.loadFavoritesFromCoreData()
         
         if favoriteQuotes.contains(where: { $0.symbol == quoteData[indexPath.row].symbol }) {
             favoriteButton.setImage(UIImage(named: "heart"), for: .normal)
@@ -169,6 +135,14 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         let chartViewController = ChartViewController()
         chartViewController.quote = quoteData[indexPath.row]
         self.navigationController?.pushViewController(chartViewController, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        network.getLogo(quote: quoteData[indexPath.row])
+        network.getQuotes(quote: quoteData[indexPath.row])
+        cell.contentView.layer.masksToBounds = true
+        let radius = cell.contentView.layer.cornerRadius
+        cell.layer.shadowPath = UIBezierPath(roundedRect: cell.bounds, cornerRadius: radius).cgPath
     }
 }
 

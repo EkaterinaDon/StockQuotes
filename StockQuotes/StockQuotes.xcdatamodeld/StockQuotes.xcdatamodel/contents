@@ -2,20 +2,18 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17709" systemVersion="19H524" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="FavoriteQuote" representedClassName="FavoriteQuote" syncable="YES">
         <attribute name="currency" optional="YES" attributeType="String"/>
+        <attribute name="logo" optional="YES" attributeType="String"/>
         <attribute name="longName" optional="YES" attributeType="String"/>
-        <attribute name="regularMarketDayHigh" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="regularMarketDayLow" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Quote" representedClassName="Quote" syncable="YES">
         <attribute name="currency" optional="YES" attributeType="String"/>
+        <attribute name="logo" optional="YES" attributeType="String"/>
         <attribute name="longName" optional="YES" attributeType="String"/>
-        <attribute name="regularMarketDayHigh" optional="YES" attributeType="Float" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="regularMarketDayLow" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
     </entity>
     <elements>
-        <element name="Quote" positionX="-63" positionY="-18" width="128" height="118"/>
-        <element name="FavoriteQuote" positionX="-63" positionY="18" width="128" height="118"/>
+        <element name="FavoriteQuote" positionX="-63" positionY="18" width="128" height="103"/>
+        <element name="Quote" positionX="-63" positionY="-18" width="128" height="103"/>
     </elements>
 </model>
