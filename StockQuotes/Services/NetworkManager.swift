@@ -6,55 +6,78 @@
 //
 
 import Foundation
+import Alamofire
 import CoreData
+
+let finnhubToken = "c0tnocv48v6qoe9bkvlg"
+var savedImages : [String:UIImage] = [:]
+var price: [String:Float] = [:]
+var priceChange: [String:Float] = [:]
 
 final class NetworkManager {
     
-    let mboumApikey = "hw88SeMXOPZ30whU4PYqJXnAVBxpMXnLYyEYDsobkt2Mul5PizVtXhuhgw2u"
-    
-    let defaultSession = URLSession(configuration: .default)
-    var dataTask: URLSessionTask?
-   
-    let symbol = "AAPL,ENPH,NFLX,GM,TSLA,INTC,AAL,LLY,F,WFC,TWTR,VIAC,ETSY,FCX,AMAT,LRCX,KR,OXY,STX,DISCA,PXD,SLB,ALB,LUMN,MRO,FOXA,DVN,EOG,HAL,SIVB,CNC,LB,TER,IRM,FANG,GPS,AES,URI,KMX,APA,FITB,CFG,FTI,HES,INCY,MTB,PVH,NOV,FOX,ZION"
-    
-    
-    func loadData(complition: @escaping ([Model]) -> Void) {
-        dataTask?.cancel()
-        
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "https"
-        urlComponents.host = "mboum.com"
-        urlComponents.path = "/api/v1/qu/quote/"
-        urlComponents.queryItems = [
-            URLQueryItem(name: "symbol", value: symbol),
-            URLQueryItem(name: "apikey", value: mboumApikey)
-        ]
-        
-            guard let url = urlComponents.url else { return }
+    func loadData() {
+         let url = URL(string: "https://finnhub.io/api/v1/stock/symbol?exchange=US&token=\(finnhubToken)")!
             
-            dataTask = defaultSession.dataTask(with: url, completionHandler: { (data, response, error) -> Void in
-                if (error != nil) {
-                    debugPrint("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-                } else {
-                    //let httpResponse = response as? HTTPURLResponse
-                    if let data = data {
-                        let decoder = JSONDecoder()
-                        do {
-                            let parsed = try decoder.decode([Model].self, from: data)
-                            DispatchQueue.main.async {
-                                self.saveToCoreData(models: parsed)
-                                complition(parsed)
-                            }
-                        } catch {
-                            debugPrint(error.localizedDescription)
-                        }
-                    }
-                }
-            })
-            
-            dataTask?.resume()
+        AF.request(url).responseData { [weak self] (response) in
+            guard let data = response.value else { return }
+            let decoder = JSONDecoder()
+            do {
+                let parsed = try decoder.decode([Model].self, from: data)
+                self?.saveToCoreData(models: parsed)
+            } catch {
+                debugPrint(error.localizedDescription)
+            }
+        }
     }
-
+    
+    func getLogo(quote: Quote) {
+        guard let symbol = quote.symbol else { return }
+            AF.request("https://finnhub.io/api/v1/stock/profile2?symbol=\(symbol.uppercased())&token=\(finnhubToken)").responseData { (response) in
+                guard let data = response.value else { return }
+                let decoder = JSONDecoder()
+                do {
+                    if let logo = try decoder.decode(Model.self, from: data).logo {
+                        self.saveLogoToCoreData(symbol: symbol, logo: logo)
+                        self.downloadLogo(symbol: symbol, logo: logo)
+                    }
+                } catch {
+                    debugPrint(error.localizedDescription)
+                }
+            }
+        
+    }
+        
+    func downloadLogo(symbol: String, logo: String) {
+        AF.request(logo).response { (data) in
+            if let dataImg = data.data {
+                let image = UIImage(data: dataImg)
+                savedImages[symbol] = image
+            }
+        }
+    }
+    
+    func getQuotes(quote: Quote) {
+        guard let symbol = quote.symbol else { return }
+            AF.request("https://finnhub.io/api/v1/quote?symbol=\(symbol.uppercased())&token=\(finnhubToken)").responseData { (response) in
+                guard let data = response.value else { return }
+                let decoder = JSONDecoder()
+                do {
+                    if let current = try decoder.decode(Model.self, from: data).currentPrice,
+                       let previouse = try decoder.decode(Model.self, from: data).previousClosePrice {
+                        price[symbol] = current
+                        priceChange[symbol] = current - previouse
+                    }
+//                    if let previouse = try decoder.decode(Model.self, from: data).previousClosePrice {
+//                        prevPrice[symbol] = previouse
+//                    }
+                } catch {
+                    debugPrint(error.localizedDescription)
+                }
+            }
+    }
+    
+    
     // MARK: Save to Core Data
     
     let storeStack = CoreDataStack()
@@ -76,11 +99,25 @@ final class NetworkManager {
             quote.setValue(model.longName, forKey: "longName")
             quote.setValue(model.currency, forKey: "currency")
             quote.setValue(model.symbol, forKey: "symbol")
-            quote.setValue(model.regularMarketDayLow, forKey: "regularMarketDayLow")
-            quote.setValue(model.regularMarketDayLow, forKey: "regularMarketDayLow")
         }
         storeStack.saveContext()
         
     }
+    
+    func saveLogoToCoreData(symbol: String, logo: String) {
+        let context = storeStack.context
+        
+        let request : NSFetchRequest<Quote> = Quote.fetchRequest()
+        request.returnsObjectsAsFaults = false
+        let results = try! context.fetch(request)
+        
+        results.forEach { quote in
+            if quote.symbol == symbol {
+                quote.logo = logo
+            }
+        }
+        storeStack.saveContext()
+        
+    }
+    
 }
-

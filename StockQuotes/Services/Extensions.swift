@@ -5,7 +5,7 @@
 //  Created by Ekaterina on 29.03.21.
 //
 
-import Foundation
+import UIKit
 
 extension Date {
     func dateComponents(_ components: Set<Calendar.Component>, using calendar: Calendar = .current) -> DateComponents {
