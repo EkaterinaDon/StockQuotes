@@ -1,8 +1,8 @@
 //
 //  Quote+CoreDataClass.swift
-//  StockQuotes
+//  
 //
-//  Created by Ekaterina on 27.03.21.
+//  Created by Ekaterina on 3.05.21.
 //
 //
 
