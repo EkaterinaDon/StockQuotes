@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17709" systemVersion="19H524" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17709" systemVersion="19H1030" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="FavoriteQuote" representedClassName="FavoriteQuote" syncable="YES">
         <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="logo" optional="YES" attributeType="String"/>
+        <attribute name="logoImage" optional="YES" attributeType="Binary"/>
         <attribute name="longName" optional="YES" attributeType="String"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Quote" representedClassName="Quote" syncable="YES">
         <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="logo" optional="YES" attributeType="String"/>
+        <attribute name="logoImage" optional="YES" attributeType="Binary"/>
         <attribute name="longName" optional="YES" attributeType="String"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
     </entity>
     <elements>
-        <element name="FavoriteQuote" positionX="-63" positionY="18" width="128" height="103"/>
-        <element name="Quote" positionX="-63" positionY="-18" width="128" height="103"/>
+        <element name="FavoriteQuote" positionX="-63" positionY="18" width="128" height="118"/>
+        <element name="Quote" positionX="-63" positionY="-18" width="128" height="118"/>
     </elements>
 </model>

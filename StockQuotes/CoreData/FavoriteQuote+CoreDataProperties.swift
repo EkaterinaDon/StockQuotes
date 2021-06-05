@@ -20,6 +20,7 @@ extension FavoriteQuote {
     @NSManaged public var longName: String?
     @NSManaged public var symbol: String?
     @NSManaged public var logo: String?
+    @NSManaged public var logoImage: Data?
 
 }
 

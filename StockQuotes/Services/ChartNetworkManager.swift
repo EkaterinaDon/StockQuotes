@@ -6,16 +6,11 @@
 //
 
 import Foundation
+import Alamofire
 
 final class ChartNetworkManager {
     
-    let finnhubToken = "c0tnocv48v6qoe9bkvlg"
-    
-    let defaultSession = URLSession(configuration: .default)
-    var dataTask: URLSessionTask?
-    
-    func getChart(ticker: String, to: requestType) {
-        dataTask?.cancel()
+    func getChart(ticker: String, to: requestType, completion: @escaping ()->()) {
         
         var resolution = "D"
         let today = Date()
@@ -26,11 +21,11 @@ final class ChartNetworkManager {
         
         switch to {
         case .month:
-            
+            resolution = "W"
             dayFrom = today.startOfMonth.timeIntervalSince1970
             dayTo = today.endOfMonth.timeIntervalSince1970
         case .week:
-            
+            resolution = "D"
             dayFrom = today.startOfWeek(using: Calendar.current).timeIntervalSince1970
             dayTo = today.timeIntervalSince1970
         case .year:
@@ -44,27 +39,22 @@ final class ChartNetworkManager {
 
         let url = URL(string: "https://finnhub.io/api/v1/stock/candle?symbol=\(ticker)&resolution=\(resolution)&from=\(Int(dayFrom))&to=\(Int(dayTo))&token=\(finnhubToken)")!
         
-        dataTask = defaultSession.dataTask(with: url, completionHandler: { (data, response, error) -> Void in
-            if (error != nil) {
-                debugPrint("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-            } else {
-                if let data = data {
-                    let decoder = JSONDecoder()
-                    do {
-                        if let value = try decoder.decode(ModelForChart.self, from: data).c {
-                            valueChartArray = value
-                        }
-                        if let time = try decoder.decode(ModelForChart.self, from: data).t {
-                            createTimeChartArray(from: time)
-                        }
-                    } catch {
-                        debugPrint(error.localizedDescription)
-                    }
-                }
-            }
-        })
         
-        dataTask?.resume()
+        AF.request(url).responseData { (response) in
+            guard let data = response.value else { return }
+            let decoder = JSONDecoder()
+            do {
+                if let value = try decoder.decode(ModelForChart.self, from: data).c {
+                    valueChartArray = value
+                }
+                if let time = try decoder.decode(ModelForChart.self, from: data).t {
+                    createTimeChartArray(from: time)
+                }
+                completion()
+            } catch {
+                debugPrint(error.localizedDescription)
+            }
+        }
         
     }
 }

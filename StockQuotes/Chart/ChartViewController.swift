@@ -16,7 +16,7 @@ class ChartViewController: UIViewController, ChartViewDelegate {
     
     lazy var lineChartView: LineChartView = {
         let chartView = LineChartView()
-        chartView.backgroundColor = .systemBlue
+        chartView.backgroundColor = .white
         chartView.noDataText = "No data now"
         
         chartView.rightAxis.enabled = false
@@ -25,22 +25,28 @@ class ChartViewController: UIViewController, ChartViewDelegate {
         let yAxis = chartView.leftAxis
         yAxis.labelFont = .boldSystemFont(ofSize: 12)
         yAxis.setLabelCount(6, force: false)
-        yAxis.labelTextColor = .white
-        yAxis.axisLineColor = .white
+        yAxis.labelTextColor = .black
+        yAxis.axisLineColor = .black
         yAxis.labelPosition = .outsideChart
         
         chartView.xAxis.labelPosition = .bottom
         chartView.xAxis.labelFont = .boldSystemFont(ofSize: 12)
         chartView.xAxis.setLabelCount(6, force: false)
-        chartView.xAxis.labelTextColor = .white
-        chartView.xAxis.axisLineColor = .systemBlue
+        chartView.xAxis.labelTextColor = .black
+        chartView.xAxis.axisLineColor = .black
+        
+        chartView.xAxis.granularity = 1.0
+        chartView.xAxis.drawGridLinesEnabled = true
+        chartView.xAxis.avoidFirstLastClippingEnabled = true
+        chartView.xAxis.forceLabelsEnabled = false
+        chartView.fitScreen()
         
         chartView.animate(xAxisDuration: 2.5)
         
         return chartView
     }()
     
-    var quote = Quote()
+    var quote: Quote!
     var network = ChartNetworkManager()
     var chart: ModelForChart?
     
@@ -50,8 +56,9 @@ class ChartViewController: UIViewController, ChartViewDelegate {
         self.title = quote.symbol
         self.configureUI()
         
-        network.getChart(ticker: quote.symbol!, to: .month)
-        setData()
+        network.getChart(ticker: quote.symbol!, to: .month) {
+            self.setData()
+        }
     }
     
 //MARK: UI
@@ -78,10 +85,9 @@ class ChartViewController: UIViewController, ChartViewDelegate {
     func setData() {
         let dataSet = LineChartDataSet(entries: createChartDataArray(), label: quote.longName)
         dataSet.drawCirclesEnabled = false
-        dataSet.mode = .cubicBezier
+        dataSet.mode = .horizontalBezier
         dataSet.lineWidth = 3
-        dataSet.setColor(.white)
-        dataSet.fill = Fill(color: .white)
+        dataSet.setColor(.blue)
         dataSet.fillAlpha = 0.8
         dataSet.drawFilledEnabled = true
         
@@ -93,14 +99,18 @@ class ChartViewController: UIViewController, ChartViewDelegate {
     
     @objc func segmentedValueChanged(sender: UISegmentedControl!) {
         if sender.selectedSegmentIndex == 0 {
-            network.getChart(ticker: quote.symbol!, to: .week)
-            setData()
+            network.getChart(ticker: quote.symbol!, to: .week) {
+                self.setData()
+            }
+            
         } else if sender.selectedSegmentIndex == 1 {
-            network.getChart(ticker: quote.symbol!, to: .month)
-            setData()
+            network.getChart(ticker: quote.symbol!, to: .month) {
+                self.setData()
+            }
         } else if sender.selectedSegmentIndex == 2 {
-            network.getChart(ticker: quote.symbol!, to: .year)
-            setData()
+            network.getChart(ticker: quote.symbol!, to: .year) {
+                self.setData()
+            }
         }
     }
 }

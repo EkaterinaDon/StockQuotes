@@ -1,8 +1,8 @@
 //
 //  Quote+CoreDataProperties.swift
-//  StockQuotes
+//  
 //
-//  Created by Ekaterina on 27.03.21.
+//  Created by Ekaterina on 3.05.21.
 //
 //
 
@@ -17,12 +17,9 @@ extension Quote {
     }
 
     @NSManaged public var currency: String?
+    @NSManaged public var logo: String?
     @NSManaged public var longName: String?
     @NSManaged public var symbol: String?
-    @NSManaged public var logo: String?
-
-}
-
-extension Quote : Identifiable {
+    @NSManaged public var logoImage: Data?
 
 }

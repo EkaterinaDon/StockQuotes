@@ -10,14 +10,10 @@ import UIKit
 class FavoriteQuotesViewController: UIViewController {
 
     var tableView = UITableView()
-    let storeStack = CoreDataStack()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.configureUI()
-        favoriteQuotes = storeStack.loadFavoritesFromCoreData()
-        self.tableView.reloadData()
-                
     }
 
     // MARK: TableView
@@ -27,8 +23,9 @@ class FavoriteQuotesViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         
-        tableView.register(FavoriteQuotesTableViewCell.self, forCellReuseIdentifier: "FavoriteQuotesCell")
+        tableView.register(StocksTableViewCell.self, forCellReuseIdentifier: "StocksTableViewCell")
         tableView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
+        tableView.rowHeight = 55.0
         
         view.addSubview(tableView)
     }
@@ -43,22 +40,27 @@ extension FavoriteQuotesViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let dequeuedCell = tableView.dequeueReusableCell(withIdentifier: "FavoriteQuotesCell", for: indexPath)
-        guard let cell = dequeuedCell as? FavoriteQuotesTableViewCell else { return dequeuedCell }
+        let dequeuedCell = tableView.dequeueReusableCell(withIdentifier: "StocksTableViewCell", for: indexPath)
+        guard let cell = dequeuedCell as? StocksTableViewCell else { return dequeuedCell }
         cell.configure(with: favoriteQuotes[indexPath.row])
-        let image = savedImages[favoriteQuotes[indexPath.row].symbol!]
-        cell.companyImageView.image = image
         return cell
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             tableView.beginUpdates()
-            storeStack.deleteFromFavorites(quote: favoriteQuotes[indexPath.row])
-            favoriteQuotes.remove(at: indexPath.row)
+            let favorite = favoriteQuotes[indexPath.row]
+            CoreDataStack.sharedInstance.context.delete(favorite)
+            CoreDataStack.sharedInstance.saveContext()
             tableView.deleteRows(at: [indexPath], with: .fade)
             tableView.endUpdates()
         }
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let realTimeDataViewController = RealTimeDataViewController()
+        realTimeDataViewController.quote = favoriteQuotes[indexPath.row]
+        self.navigationController?.pushViewController(realTimeDataViewController, animated: true)
     }
     
     

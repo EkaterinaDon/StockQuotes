@@ -39,19 +39,6 @@ func createTimeChartArray(from: [Int]) {
     for element in from {
         let dateDay = Date(timeIntervalSince1970: TimeInterval.init(element))
         
-//        switch request {
-//        case .week:
-//            dateChartArray.append(dateDay.nameOfDay())
-//        case .month:
-//            df.dateFormat = "dd"
-//            dateChartArray.append(df.string(from: dateDay))
-//        case .year:
-//            df.dateFormat = "MMM"
-//            dateChartArray.append(df.string(from: dateDay))
-//        case .none:
-//            dateChartArray.append(dateDay.nameOfDay())
-//        }
-        
         if request == requestType.year {
             df.dateFormat = "MMM"
             dateChartArray.append(df.string(from: dateDay))
