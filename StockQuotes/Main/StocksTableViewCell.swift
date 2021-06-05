@@ -10,8 +10,6 @@ import UIKit
 
 class StocksTableViewCell: UITableViewCell {
     
-    var quoteData = Quote()
-    
     // MARK: - Subviews
     
     private(set) lazy var companyImageView: UIImageView = {
@@ -23,6 +21,15 @@ class StocksTableViewCell: UITableViewCell {
         return imageView
     }()
     
+    private(set) lazy var tickerleLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .lightGray
+        label.font = UIFont.systemFont(ofSize: 12.0)
+        label.textAlignment = .center
+        return label
+    }()
+    
     private(set) lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -32,10 +39,11 @@ class StocksTableViewCell: UITableViewCell {
     }()
     
     private(set) lazy var favoriteButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.layer.masksToBounds = true
-        
+        button.isUserInteractionEnabled = true
+        button.backgroundColor = .clear
         return button
     }()
     
@@ -50,7 +58,7 @@ class StocksTableViewCell: UITableViewCell {
     private(set) lazy var priceLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .lightGray
+        label.textColor = .black
         label.font = UIFont.systemFont(ofSize: 14.0)
         return label
     }()
@@ -58,7 +66,6 @@ class StocksTableViewCell: UITableViewCell {
     private(set) lazy var changesLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .lightGray
         label.font = UIFont.systemFont(ofSize: 12.0)
         return label
     }()
@@ -68,16 +75,6 @@ class StocksTableViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.configureUI()
-        
-        backgroundColor = .clear
-        layer.masksToBounds = false
-        layer.shadowOpacity = 0.5 
-        layer.shadowRadius = 2
-        layer.shadowOffset = CGSize(width: 3, height: 3)
-        layer.shadowColor = UIColor.black.cgColor
-        
-        contentView.backgroundColor = .white
-        contentView.layer.cornerRadius = 12
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -90,7 +87,8 @@ class StocksTableViewCell: UITableViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        [self.titleLabel, self.subtitleLabel, self.priceLabel, self.changesLabel].forEach { $0.text = nil }
+        [self.titleLabel, self.subtitleLabel, self.priceLabel, self.changesLabel, self.tickerleLabel].forEach { $0.text = nil }
+        self.companyImageView.image = nil
     }
     
     private func configureUI() {
@@ -105,11 +103,18 @@ class StocksTableViewCell: UITableViewCell {
     private func addImage() {
         self.contentView.addSubview(self.companyImageView)
         NSLayoutConstraint.activate([
-            self.companyImageView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
-            self.companyImageView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor),
+            self.companyImageView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
             self.companyImageView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor),
             self.companyImageView.heightAnchor.constraint(equalToConstant: 50.0),
             self.companyImageView.widthAnchor.constraint(equalToConstant: 50.0)
+        ])
+        
+        self.contentView.addSubview(self.tickerleLabel)
+        NSLayoutConstraint.activate([
+            self.tickerleLabel.leadingAnchor.constraint(equalTo: self.companyImageView.leadingAnchor),
+            self.tickerleLabel.trailingAnchor.constraint(equalTo: self.companyImageView.trailingAnchor),
+            self.tickerleLabel.centerYAnchor.constraint(equalTo: self.companyImageView.centerYAnchor),
+            self.tickerleLabel.heightAnchor.constraint(equalToConstant: 25.0)
         ])
     }
     
@@ -126,7 +131,7 @@ class StocksTableViewCell: UITableViewCell {
         self.contentView.addSubview(self.favoriteButton)
         NSLayoutConstraint.activate([
             self.favoriteButton.topAnchor.constraint(equalTo: self.contentView.topAnchor, constant: 4.0),
-            self.favoriteButton.leftAnchor.constraint(equalTo: self.titleLabel.rightAnchor),
+            self.favoriteButton.leftAnchor.constraint(equalTo: self.titleLabel.rightAnchor, constant: 2.0),
             self.favoriteButton.heightAnchor.constraint(equalToConstant: 20.0),
             self.favoriteButton.widthAnchor.constraint(equalToConstant: 20.0)
             ])
@@ -135,7 +140,7 @@ class StocksTableViewCell: UITableViewCell {
     private func addSubtitleLabel() {
         self.contentView.addSubview(self.subtitleLabel)
         NSLayoutConstraint.activate([
-            self.subtitleLabel.topAnchor.constraint(equalTo: self.titleLabel.bottomAnchor),
+            self.subtitleLabel.topAnchor.constraint(equalTo: self.titleLabel.bottomAnchor, constant: 6.0),
             self.subtitleLabel.leftAnchor.constraint(equalTo: self.companyImageView.rightAnchor, constant: 12.0),
             self.subtitleLabel.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -140.0)
             ])
@@ -160,27 +165,46 @@ class StocksTableViewCell: UITableViewCell {
     // MARK: - Methods
     
     func configure(with cellModelFromCoreData: Quote) {
+        updateButton(quote: cellModelFromCoreData)
         self.titleLabel.text = cellModelFromCoreData.symbol
         self.subtitleLabel.text = cellModelFromCoreData.longName
-        guard let symbol = cellModelFromCoreData.symbol else { return }
-        self.priceLabel.text = cellModelFromCoreData.currency! + "\(price[symbol] ?? 0.0)"
-        self.changesLabel.text = "\(priceChange[symbol] ?? 0.0)"
-        if (price[symbol] ?? 0.0) > 0 {
-            self.changesLabel.textColor = .green
-        } else if (price[symbol] ?? 0.0) < 0 {
-            self.changesLabel.textColor = .red
-        }
-        let image = savedImages[symbol]
-        self.companyImageView.image = image
         
-        self.updateButton(quote: cellModelFromCoreData)
+        guard let symbol = cellModelFromCoreData.symbol else { return }
+        self.priceLabel.text = cellModelFromCoreData.currency! + " \(price[symbol] ?? 0.0)"
+        
+        self.changesLabel.text = (String(format: "%.2f", priceChange[symbol] ?? 0) + "%")
+        if (priceChange[symbol] ?? 0.0) > 0.0 {
+            self.changesLabel.textColor = .green
+        } else if (priceChange[symbol] ?? 0.0) < 0.0 {
+            self.changesLabel.textColor = .red
+        } else {
+            self.changesLabel.textColor = .lightGray
+        }
+        
+        if let image = cellModelFromCoreData.logoImage {
+            self.tickerleLabel.isHidden = true
+            self.companyImageView.image = UIImage(data: image)
+        } else {
+            self.tickerleLabel.text = cellModelFromCoreData.symbol
+            self.tickerleLabel.isHidden = false
+            self.companyImageView.backgroundColor = .clear
+        }
+        
+    }
+    
+    func configure(with cellModel: FavoriteQuote) {
+        self.titleLabel.text = cellModel.symbol
+        self.subtitleLabel.text = cellModel.longName
+        guard let image = cellModel.logoImage else { return }
+        self.companyImageView.image = UIImage(data: image)
+        
     }
     
     func updateButton(quote: Quote) {
         if favoriteQuotes.contains(where: {$0.symbol == quote.symbol }) {
-            favoriteButton.setImage(UIImage(named: "filledHeart"), for: .normal)
+            favoriteButton.setImage(UIImage(named: "choosedStar"), for: .normal)
         } else {
-            favoriteButton.setImage(UIImage(named: "heart"), for: .normal)
+            favoriteButton.setImage(UIImage(named: "star"), for: .normal)
         }
     }
 }

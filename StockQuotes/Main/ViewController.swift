@@ -7,9 +7,6 @@
 
 import UIKit
 
-var favoriteQuotes: [FavoriteQuote] = []
-
-
 class ViewController: UIViewController {
     
     var tableView = UITableView()
@@ -22,18 +19,17 @@ class ViewController: UIViewController {
     }
     
     let network = NetworkManager()
-    var favorites: [Quote] = []
-    var quoteData = [Quote]()
     var filteredQuotes: [Quote] = []
     
-    let storeStack = CoreDataStack()
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureUI()
+        network.loadData {
+            self.tableView.reloadData()
+        }
         
-        self.configureUI()
-        self.loadData()
-        favoriteQuotes = storeStack.loadFavoritesFromCoreData()
     }
     
     // MARK: UI
@@ -47,6 +43,7 @@ class ViewController: UIViewController {
         
         tableView.register(StocksTableViewCell.self, forCellReuseIdentifier: "Cell")
         tableView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
+        tableView.rowHeight = 55.0
         
         view.addSubview(tableView)
         
@@ -60,14 +57,6 @@ class ViewController: UIViewController {
         definesPresentationContext = true
     }
     
-    // MARK: Load Data
-    
-    func loadData() {
-        network.loadData()
-        self.quoteData = storeStack.loadFromCoreData()
-        self.tableView.reloadData()
-    }
-    
     @objc func showFavorites() {
         let favoriteQuotesViewController = FavoriteQuotesViewController()
         navigationController?.pushViewController(favoriteQuotesViewController, animated: true)
@@ -76,14 +65,14 @@ class ViewController: UIViewController {
     // MARK: Search
     
     func filterByNamesForQuotes(_ searchText: String) {
-        filteredQuotes = quoteData.filter { (quote: Quote) -> Bool in
+        filteredQuotes = quotes.filter { (quote: Quote) -> Bool in
             return (quote.longName?.lowercased().contains(searchText.lowercased()))!
         }
         tableView.reloadData()
     }
     
     func filterByTickerForQuotes(_ searchText: String) {
-        filteredQuotes = quoteData.filter { (quote: Quote) -> Bool in
+        filteredQuotes = quotes.filter { (quote: Quote) -> Bool in
             return (quote.symbol?.lowercased().contains(searchText.lowercased()))!
         }
         tableView.reloadData()
@@ -95,7 +84,7 @@ class ViewController: UIViewController {
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if !isFiltering {
-            return quoteData.count
+            return quotes.count
         } else {
             return filteredQuotes.count
         }
@@ -106,7 +95,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         guard let cell = dequeuedCell as? StocksTableViewCell else { return dequeuedCell }
         
         if !isFiltering {
-            cell.configure(with: quoteData[indexPath.row])
+            cell.configure(with: quotes[indexPath.row])
         } else {
             cell.configure(with: filteredQuotes[indexPath.row])
         }
@@ -119,30 +108,27 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         
         guard let indexPath = tableView.indexPathForRow(at: favoriteButton.convert(favoriteButton.frame.origin, to: tableView)) else { return }
         
-        if favoriteQuotes.contains(where: { $0.symbol == quoteData[indexPath.row].symbol }) {
-            favoriteButton.setImage(UIImage(named: "heart"), for: .normal)
-            favoriteQuotes = favoriteQuotes.filter { $0.symbol == quoteData[indexPath.row].symbol }
-            storeStack.deleteFromFavoritesForButton(quote: quoteData[indexPath.row])
+        if favoriteQuotes.contains(where: { $0.symbol == quotes[indexPath.row].symbol }) {
+            favoriteButton.setImage(UIImage(named: "star"), for: .normal)
+            let quoteToDelete = favoriteQuotes.filter { $0.symbol == quotes[indexPath.row].symbol }
+            CoreDataStack.sharedInstance.context.delete(quoteToDelete.first!)
+            CoreDataStack.sharedInstance.saveContext()
         } else {
-            favoriteButton.setImage(UIImage(named: "filledHeart"), for: .normal)
-            storeStack.saveToFavorites(model: quoteData[indexPath.row])
+            favoriteButton.setImage(UIImage(named: "choosedStar"), for: .normal)
+            CoreDataStack.sharedInstance.saveToFavorites(model: quotes[indexPath.row])
         }
-        favoriteQuotes = storeStack.loadFavoritesFromCoreData()
     }
     
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let chartViewController = ChartViewController()
-        chartViewController.quote = quoteData[indexPath.row]
+        chartViewController.quote = quotes[indexPath.row]
         self.navigationController?.pushViewController(chartViewController, animated: true)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        network.getLogo(quote: quoteData[indexPath.row])
-        network.getQuotes(quote: quoteData[indexPath.row])
-        cell.contentView.layer.masksToBounds = true
-        let radius = cell.contentView.layer.cornerRadius
-        cell.layer.shadowPath = UIBezierPath(roundedRect: cell.bounds, cornerRadius: radius).cgPath
+        network.getLogo(quote: quotes[indexPath.row])
+        network.getQuotes(quote: quotes[indexPath.row])
     }
 }
 
@@ -153,8 +139,9 @@ extension ViewController: UISearchResultsUpdating {
         let searchBar = searchController.searchBar
         if searchBar.selectedScopeButtonIndex == 0 {
             filterByNamesForQuotes(searchBar.text!)
+        } else if searchBar.selectedScopeButtonIndex == 1 {
+            filterByTickerForQuotes(searchBar.text!)
         }
-        filterByTickerForQuotes(searchBar.text!)
     }
 }
 

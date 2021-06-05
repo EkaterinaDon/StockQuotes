@@ -35,7 +35,45 @@ struct Model : Codable {
         logo = try values.decodeIfPresent(String.self, forKey: .logo)
     }
     
-//    func getLogoAndData() {
-//        self.getLogo()
-//    }
+}
+
+struct MboumModel : Codable {
+    
+    let mQuotes : [MQuote]?
+    
+    enum CodingKeys: String, CodingKey {
+        case mQuotes = "quotes"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        mQuotes = try values.decodeIfPresent([MQuote].self, forKey: .mQuotes)
+    }
+}
+
+struct MQuote : Codable {
+        
+        let displayName : String?
+        let longName : String?
+        let shortName : String?
+        let currency : String?
+        let symbol : String?
+        
+        enum CodingKeys: String, CodingKey {
+                case currency = "currency"
+                case displayName = "displayName"
+                case longName = "longName"
+                case shortName = "shortName"
+                case symbol = "symbol"
+        }
+    
+        init(from decoder: Decoder) throws {
+                let values = try decoder.container(keyedBy: CodingKeys.self)
+                currency = try values.decodeIfPresent(String.self, forKey: .currency)
+                displayName = try values.decodeIfPresent(String.self, forKey: .displayName)
+                longName = try values.decodeIfPresent(String.self, forKey: .longName)
+                shortName = try values.decodeIfPresent(String.self, forKey: .shortName)
+                symbol = try values.decodeIfPresent(String.self, forKey: .symbol)
+        }
+
 }
